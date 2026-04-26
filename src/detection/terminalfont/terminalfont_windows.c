@@ -141,7 +141,6 @@ static void detectFromWindowsTerminal(const FFstrbuf* terminalExe, FFTerminalFon
             }
 #endif
         }
-        }
     }
 
     if (!error && json.length == 0) {

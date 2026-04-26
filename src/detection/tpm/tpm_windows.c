@@ -6,6 +6,9 @@
 #include <winerror.h>
 
 const char* ffDetectTPM(FFTPMResult* result) {
+#ifdef FF_WINXP_COMPAT
+    return "TPM detection is not supported on Windows XP";
+#else
     FF_LIBRARY_LOAD_MESSAGE(tbs, "TBS" FF_LIBRARY_EXTENSION, -1)
     FF_LIBRARY_LOAD_SYMBOL_MESSAGE(tbs, Tbsi_GetDeviceInfo)
 
@@ -48,4 +51,5 @@ const char* ffDetectTPM(FFTPMResult* result) {
     }
 
     return NULL;
+#endif
 }
