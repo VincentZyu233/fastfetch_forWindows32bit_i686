@@ -69,6 +69,16 @@ static bool isProcessTrusted(DWORD processId, FFProcessType processType, UNICODE
         static wchar_t windowsAppsPath[MAX_PATH];
         static uint32_t windowsAppsPathLen;
         if (windowsAppsPathLen == 0) {
+#ifdef FF_WINXP_COMPAT
+            wchar_t pPath[MAX_PATH];
+            if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PROGRAM_FILES, NULL, SHGFP_TYPE_CURRENT, pPath))) {
+                windowsAppsPathLen = (uint32_t) wcslen(pPath);
+                memcpy(windowsAppsPath, pPath, windowsAppsPathLen * sizeof(wchar_t));
+                memcpy(windowsAppsPath + windowsAppsPathLen, L"\\WindowsApps\\", sizeof(L"\\WindowsApps\\"));
+                windowsAppsPathLen += strlen("\\WindowsApps\\");
+            } else
+                windowsAppsPathLen = -1u;
+#else
             PWSTR pPath = NULL;
             if (SUCCEEDED(SHGetKnownFolderPath(&FOLDERID_ProgramFiles, KF_FLAG_DEFAULT, NULL, &pPath))) {
                 windowsAppsPathLen = (uint32_t) wcslen(pPath);
@@ -79,6 +89,7 @@ static bool isProcessTrusted(DWORD processId, FFProcessType processType, UNICODE
                 windowsAppsPathLen = -1u;
             }
             CoTaskMemFree(pPath);
+#endif
         }
         if (windowsAppsPathLen != -1u &&
             (buffer->Length <= windowsAppsPathLen * sizeof(wchar_t) ||               // Path is too short to be in WindowsApps
@@ -190,6 +201,15 @@ const char* ffDetectWMVersion(const FFstrbuf* wmName, FFstrbuf* result, FF_A_UNU
     }
 
     if (ffStrbufEqualS(wmName, "dwm.exe")) {
+#ifdef FF_WINXP_COMPAT
+        wchar_t pPath[MAX_PATH];
+        if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_SYSTEM, NULL, SHGFP_TYPE_CURRENT, pPath))) {
+            wchar_t fullPath[MAX_PATH];
+            wcscpy(fullPath, pPath);
+            wcscat(fullPath, L"\\dwm.exe");
+            ffGetFileVersion(fullPath, NULL, result);
+        }
+#else
         PWSTR pPath = NULL;
         if (SUCCEEDED(SHGetKnownFolderPath(&FOLDERID_System, KF_FLAG_DEFAULT, NULL, &pPath))) {
             wchar_t fullPath[MAX_PATH];
@@ -198,6 +218,7 @@ const char* ffDetectWMVersion(const FFstrbuf* wmName, FFstrbuf* result, FF_A_UNU
             ffGetFileVersion(fullPath, NULL, result);
         }
         CoTaskMemFree(pPath);
+#endif
         return NULL;
     }
     return "Not supported on this platform";
