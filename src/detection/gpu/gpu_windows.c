@@ -9,6 +9,7 @@
 #include "d3dkmthk.h"
 
 #if _WIN32
+    #include <windows.h>
     #ifdef FF_WINXP_COMPAT
         ffD3DKMTOpenAdapterFromLuid_t pD3DKMTOpenAdapterFromLuid = NULL;
         ffD3DKMTQueryAdapterInfo_t pD3DKMTQueryAdapterInfo = NULL;

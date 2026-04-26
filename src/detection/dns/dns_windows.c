@@ -5,6 +5,25 @@
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
 
+#ifdef FF_WINXP_COMPAT
+static const char* ff_inet_ntop(int af, const void* src, char* dst, socklen_t size)
+{
+    SOCKADDR_STORAGE addr = {};
+    addr.ss_family = (ADDRESS_FAMILY) af;
+    DWORD dwSize = (DWORD) size;
+    if (af == AF_INET)
+        ((struct sockaddr_in*) &addr)->sin_addr = *(const struct in_addr*) src;
+    else if (af == AF_INET6)
+        ((struct sockaddr_in6*) &addr)->sin6_addr = *(const struct in6_addr*) src;
+    else
+        return NULL;
+    if (WSAAddressToStringA((LPSOCKADDR) &addr, sizeof(addr), NULL, dst, &dwSize) == 0)
+        return dst;
+    return NULL;
+}
+#define inet_ntop ff_inet_ntop
+#endif
+
 const char* ffDetectDNS(FFDNSOptions* options, FFlist* results) {
     IP_ADAPTER_ADDRESSES* FF_AUTO_FREE adapter_addresses = NULL;
 
