@@ -50,11 +50,13 @@ const char* ffDetectDNS(FFDNSOptions* options, FFlist* results) {
             if (ifa->Address.lpSockaddr->sa_family == AF_INET) {
                 SOCKADDR_IN* ipv4 = (SOCKADDR_IN*) ifa->Address.lpSockaddr;
                 ffStrbufInitA(item, INET_ADDRSTRLEN);
-                item->length = (uint32_t) (RtlIpv4AddressToStringA(&ipv4->sin_addr, item->chars) - item->chars);
+                if (inet_ntop(AF_INET, &ipv4->sin_addr, item->chars, (socklen_t)item->allocated))
+                    item->length = (uint32_t) strlen(item->chars);
             } else if (ifa->Address.lpSockaddr->sa_family == AF_INET6) {
                 SOCKADDR_IN6* ipv6 = (SOCKADDR_IN6*) ifa->Address.lpSockaddr;
                 ffStrbufInitA(item, INET6_ADDRSTRLEN);
-                item->length = (uint32_t) (RtlIpv6AddressToStringA(&ipv6->sin6_addr, item->chars) - item->chars);
+                if (inet_ntop(AF_INET6, &ipv6->sin6_addr, item->chars, (socklen_t)item->allocated))
+                    item->length = (uint32_t) strlen(item->chars);
             }
         }
         break;

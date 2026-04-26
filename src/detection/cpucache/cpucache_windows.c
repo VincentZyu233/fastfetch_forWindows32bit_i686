@@ -5,7 +5,7 @@
 const char* ffDetectCPUCache(FFCPUCacheResult* result) {
     LOGICAL_PROCESSOR_RELATIONSHIP lpr = RelationCache;
     DWORD length = 0;
-    NtQuerySystemInformationEx(SystemLogicalProcessorAndGroupInformation, &lpr, sizeof(lpr), NULL, 0, &length);
+    NtQuerySystemInformationEx((SYSTEM_INFORMATION_CLASS) SystemLogicalProcessorAndGroupInformation, &lpr, sizeof(lpr), NULL, 0, &length);
     if (length == 0) {
         return "GetLogicalProcessorInformationEx(RelationCache, NULL, &length) failed";
     }
@@ -13,7 +13,7 @@ const char* ffDetectCPUCache(FFCPUCacheResult* result) {
     SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX* FF_AUTO_FREE
         pProcessorInfo = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*) malloc(length);
 
-    if (!NT_SUCCESS(NtQuerySystemInformationEx(SystemLogicalProcessorAndGroupInformation, &lpr, sizeof(lpr), pProcessorInfo, length, &length))) {
+    if (!NT_SUCCESS(NtQuerySystemInformationEx((SYSTEM_INFORMATION_CLASS) SystemLogicalProcessorAndGroupInformation, &lpr, sizeof(lpr), pProcessorInfo, length, &length))) {
         return "GetLogicalProcessorInformationEx(RelationCache, pProcessorInfo, &length) failed";
     }
 

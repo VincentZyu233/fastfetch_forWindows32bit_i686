@@ -1,4 +1,4 @@
-name: Build Windows i686 (XP Compatible)
+name: Build Windows i686 (Legacy Compatible)
 
 on:
   push:
@@ -68,7 +68,7 @@ jobs:
           echo "flags: build=$BUILD release=$RELEASE"
 
   build:
-    name: Build i686 XP binary
+    name: Build i686 Legacy binary
     needs: check
     if: needs.check.outputs.should_build == 'true'
     runs-on: windows-latest
@@ -99,7 +99,7 @@ jobs:
       - name: Print compiler version
         run: gcc --version
 
-      - name: Configure project (XP Compat)
+      - name: Configure project (Legacy Compat)
         run: >
           cmake
           -G Ninja
@@ -155,13 +155,13 @@ jobs:
 
       - name: Create ZIP archive
         run: |
-          7z a -tzip -mx9 -bd -y fastfetch-windows-i686-xp.zip LICENSE fastfetch.exe flashfetch.exe *.dll presets 2>/dev/null || 7z a -tzip -mx9 -bd -y fastfetch-windows-i686-xp.zip LICENSE fastfetch.exe flashfetch.exe presets
+          7z a -tzip -mx9 -bd -y fastfetch-windows-i686-legacy.zip LICENSE fastfetch.exe flashfetch.exe *.dll presets 2>/dev/null || 7z a -tzip -mx9 -bd -y fastfetch-windows-i686-legacy.zip LICENSE fastfetch.exe flashfetch.exe presets
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: fastfetch-windows-i686-xp
-          path: ./fastfetch-windows-i686-xp.zip
+          name: fastfetch-windows-i686-legacy
+          path: ./fastfetch-windows-i686-legacy.zip
           overwrite: true
           retention-days: 5
 
@@ -179,7 +179,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v7
         with:
-          name: fastfetch-windows-i686-xp
+          name: fastfetch-windows-i686-legacy
           path: dist/
 
       - name: Create or update Release
@@ -192,20 +192,19 @@ jobs:
           COMMIT_SHA="${GITHUB_SHA::7}"
 
           cat > release_notes.md << 'NOTES_EOF'
-          ## fastfetch for Windows XP (i686)
+          ## fastfetch for Windows i686 (Legacy)
 
-          Cross-compiled for **Windows XP SP3 (i686)** using MSYS2 MINGW32 + GCC with the `ENABLE_WINXP_COMPAT` flag.
+          Cross-compiled for **old 32-bit Windows (XP / Vista / 7 / 8 / 10 i686)** using MSYS2 MINGW32 + GCC with the `ENABLE_WINXP_COMPAT` flag (`_WIN32_WINNT=0x0501`).
 
-          > This is an **experimental** build — some detection features (GPU, disk I/O) rely on Vista+ kernel APIs and may fail gracefully on XP.
+          > This is an **experimental** build — some detection features (GPU, disk I/O) rely on newer kernel APIs and may fail gracefully on older systems.
 
           ### Build Info
 
-          | Item              | Value                                    |
-          |-------------------|------------------------------------------|
-          | Target            | `i686-windows-xp`                        |
-          | Toolchain         | MSYS2 MINGW32 (GCC i686)                 |
-          | Subsystem         | Windows 5.1 (XP)                         |
-          | `_WIN32_WINNT`    | `0x0501`                                 |
+          | Item              | Value                                     |
+          |-------------------|-------------------------------------------|
+          | Target            | `i686-windows-legacy`                     |
+          | Toolchain         | MSYS2 MINGW32 (GCC i686)                  |
+          | `_WIN32_WINNT`    | `0x0501` (XP baseline)                    |
 
           ### Included Files
 
@@ -227,7 +226,7 @@ jobs:
           fastfetch.exe
           ```
 
-          ### Known Limitations on XP
+          ### Known Limitations on Old Windows
 
           - GPU detection may not work (D3DKMT not available on XP)
           - Detection modules relying on `winbrand.dll` fall back to registry

@@ -66,7 +66,7 @@ const char* ffDetectBootmgr(FFBootmgrResult* result) {
     ffEfiFillLoadOption((FFEfiLoadOption*) buffer, result);
 
     SYSTEM_SECUREBOOT_INFORMATION ssi;
-    if (NT_SUCCESS(NtQuerySystemInformation(SystemSecureBootInformation, &ssi, sizeof(ssi), NULL))) {
+    if (NT_SUCCESS(NtQuerySystemInformation((SYSTEM_INFORMATION_CLASS) SystemSecureBootInformation, &ssi, sizeof(ssi), NULL))) {
         result->secureBoot = ssi.SecureBootEnabled;
     }
 

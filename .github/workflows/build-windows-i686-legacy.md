@@ -1,7 +1,7 @@
 # Build Windows i686 (XP Compatible) Workflow
 
-> **[📖 English](build-windows-i686-xp.md)**
-> **[📖 简体中文](build-windows-i686-xp.zh-cn.md)**
+> **[📖 English](build-windows-i686-legacy.md)**
+> **[📖 简体中文](build-windows-i686-legacy.zh-cn.md)**
 
 ## Overview
 
@@ -41,7 +41,7 @@ git commit -m "release: v2.99.0 (build release)"
 After a successful run, the release (or CI artifact) contains:
 
 ```
-fastfetch-windows-i686-xp.zip
+fastfetch-windows-i686-legacy.zip
   ├── fastfetch.exe
   ├── flashfetch.exe
   ├── libgcc_s_dw2-1.dll

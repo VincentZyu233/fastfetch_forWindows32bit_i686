@@ -1,7 +1,7 @@
 # 构建 Windows i686（XP 兼容）工作流
 
-> **[📖 English](build-windows-i686-xp.md)**
-> **[📖 简体中文](build-windows-i686-xp.zh-cn.md)**
+> **[📖 English](build-windows-i686-legacy.md)**
+> **[📖 简体中文](build-windows-i686-legacy.zh-cn.md)**
 
 ## 概述
 
@@ -41,7 +41,7 @@ git commit -m "release: v2.99.0 (build release)"
 运行成功后，Release（或 CI artifact）中包含：
 
 ```
-fastfetch-windows-i686-xp.zip
+fastfetch-windows-i686-legacy.zip
   ├── fastfetch.exe
   ├── flashfetch.exe
   ├── libgcc_s_dw2-1.dll

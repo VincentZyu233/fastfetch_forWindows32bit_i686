@@ -9,6 +9,41 @@
 #include <winioctl.h>
 #include <cfgmgr32.h>
 
+// mingw32 i686 headers may lack newer STORAGE_BUS_TYPE enum values
+#ifndef BusTypeiScsi
+#define BusTypeiScsi 9
+#endif
+#ifndef BusTypeSas
+#define BusTypeSas 10
+#endif
+#ifndef BusTypeSata
+#define BusTypeSata 11
+#endif
+#ifndef BusTypeSd
+#define BusTypeSd 12
+#endif
+#ifndef BusTypeMmc
+#define BusTypeMmc 13
+#endif
+#ifndef BusTypeVirtual
+#define BusTypeVirtual 14
+#endif
+#ifndef BusTypeFileBackedVirtual
+#define BusTypeFileBackedVirtual 15
+#endif
+#ifndef BusTypeSpaces
+#define BusTypeSpaces 16
+#endif
+#ifndef BusTypeNvme
+#define BusTypeNvme 17
+#endif
+#ifndef BusTypeSCM
+#define BusTypeSCM 18
+#endif
+#ifndef BusTypeUfs
+#define BusTypeUfs 19
+#endif
+
 static const char* detectPhysicalDisk(const char* physicalType, const wchar_t* szDevice, FFlist* result, FFPhysicalDiskOptions* options) {
     FF_AUTO_CLOSE_FD HANDLE hDevice = CreateFileW(szDevice, FILE_READ_ATTRIBUTES, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hDevice == INVALID_HANDLE_VALUE) {
