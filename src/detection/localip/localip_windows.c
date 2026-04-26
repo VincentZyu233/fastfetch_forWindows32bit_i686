@@ -164,11 +164,24 @@ const char* ffDetectLocalIps(const FFLocalIpOptions* options, FFlist* results) {
 
                 SOCKADDR_IN* ipv4 = (SOCKADDR_IN*) ifa->Address.lpSockaddr;
                 char addressBuffer[INET_ADDRSTRLEN + 10];
-                char* end = RtlIpv4AddressToStringA(&ipv4->sin_addr, addressBuffer);
+                char* end;
+#ifdef FF_WINXP_COMPAT
+                {
+                    SOCKADDR_IN tmp = *ipv4;
+                    tmp.sin_port = 0;
+                    DWORD addrLen = (DWORD) sizeof(addressBuffer);
+                    WSAAddressToStringA((LPSOCKADDR) &tmp, sizeof(tmp), NULL, addressBuffer, &addrLen);
+                    end = addressBuffer + addrLen;
+                }
+#else
+                end = RtlIpv4AddressToStringA(&ipv4->sin_addr, addressBuffer);
+#endif
 
+#ifndef FF_WINXP_COMPAT
                 if ((options->showType & FF_LOCALIP_TYPE_PREFIX_LEN_BIT) && ifa->OnLinkPrefixLength) {
                     end += snprintf(end, 10, "/%u", (unsigned) ifa->OnLinkPrefixLength);
                 }
+#endif
 
                 FF_DEBUG("Adding IPv4 address: %s (isDefaultRoute=%s)", addressBuffer, isDefaultRoute ? "true" : "false");
 
@@ -216,11 +229,24 @@ const char* ffDetectLocalIps(const FFLocalIpOptions* options, FFlist* results) {
                 }
 
                 char addressBuffer[INET6_ADDRSTRLEN + 10];
-                char* end = RtlIpv6AddressToStringA(&ipv6->sin6_addr, addressBuffer);
+                char* end;
+#ifdef FF_WINXP_COMPAT
+                {
+                    SOCKADDR_IN6 tmp = *ipv6;
+                    tmp.sin6_port = 0;
+                    DWORD addrLen = (DWORD) sizeof(addressBuffer);
+                    WSAAddressToStringA((LPSOCKADDR) &tmp, sizeof(tmp), NULL, addressBuffer, &addrLen);
+                    end = addressBuffer + addrLen;
+                }
+#else
+                end = RtlIpv6AddressToStringA(&ipv6->sin6_addr, addressBuffer);
+#endif
 
+#ifndef FF_WINXP_COMPAT
                 if ((options->showType & FF_LOCALIP_TYPE_PREFIX_LEN_BIT) && ifa->OnLinkPrefixLength) {
                     end += snprintf(end, 10, "/%u", (unsigned) ifa->OnLinkPrefixLength);
                 }
+#endif
 
                 FF_DEBUG("Adding IPv6 address: %s (isDefaultRoute=%s)", addressBuffer, isDefaultRoute ? "true" : "false");
 
@@ -242,10 +268,12 @@ const char* ffDetectLocalIps(const FFLocalIpOptions* options, FFlist* results) {
 
         FF_DEBUG("Adapter %u: collected %d IPv4 and %d IPv6 addresses", (unsigned) adapter->IfIndex, ipv4Count, ipv6Count);
 
+#ifndef FF_WINXP_COMPAT
         if (options->showType & FF_LOCALIP_TYPE_SPEED_BIT) {
             item->speed = (int32_t) (adapter->ReceiveLinkSpeed / 1000000);
             FF_DEBUG("Adapter %u speed: %d Mbps (raw: %llu)", (unsigned) adapter->IfIndex, item->speed, adapter->ReceiveLinkSpeed);
         }
+#endif
         if (options->showType & FF_LOCALIP_TYPE_MTU_BIT) {
             item->mtu = (int32_t) adapter->Mtu;
             FF_DEBUG("Adapter %u MTU: %d", (unsigned) adapter->IfIndex, item->mtu);

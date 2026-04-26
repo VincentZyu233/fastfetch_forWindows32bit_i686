@@ -60,6 +60,7 @@ const char* ffDetectKeyboard(FFlist* devices /* List of FFKeyboardDevice */) {
             }
         }
 
+#ifndef FF_WINXP_COMPAT
         if (!device->name.length) {
             // https://stackoverflow.com/a/64321096/9976392
             DEVPROPTYPE propertyType;
@@ -75,6 +76,7 @@ const char* ffDetectKeyboard(FFlist* devices /* List of FFKeyboardDevice */) {
                 }
             }
         }
+#endif
 
         if (!device->name.length) {
             ffStrbufSetF(&device->name, "Unknown device %04X-%04X", (unsigned) rdi.hid.dwVendorId, (unsigned) rdi.hid.dwProductId);
