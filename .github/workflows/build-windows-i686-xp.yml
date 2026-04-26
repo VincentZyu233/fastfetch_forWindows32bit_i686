@@ -2,7 +2,7 @@ name: Build Windows i686 (XP Compatible)
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, main, dev]
   workflow_dispatch:
     inputs:
       stage:
