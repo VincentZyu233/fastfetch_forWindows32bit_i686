@@ -25,10 +25,12 @@ static inline void ffThreadMutexLock(FFThreadMutex* mutex) {
 static inline void ffThreadMutexUnlock(FFThreadMutex* mutex) {
     LeaveCriticalSection(&mutex->cs);
 }
+typedef HANDLE FFThreadType;
         #else
             #include <synchapi.h>
             #define FF_THREAD_MUTEX_INITIALIZER SRWLOCK_INIT
 typedef SRWLOCK FFThreadMutex;
+typedef HANDLE FFThreadType;
 static inline void ffThreadMutexLock(FFThreadMutex* mutex) {
     AcquireSRWLockExclusive(mutex);
 }
