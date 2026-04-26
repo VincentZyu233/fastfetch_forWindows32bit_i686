@@ -170,7 +170,12 @@ const char* ffDetectGamepad(FFlist* devices /* List of FFGamepadDevice */) {
                 OVERLAPPED overlapped = {};
                 DWORD nBytes;
                 if (ReadFile(hHidFile, reportBuffer, caps.InputReportByteLength, &nBytes, &overlapped) ||
-                    GetOverlappedResultEx(hHidFile, &overlapped, &nBytes, FF_IO_TERM_RESP_WAIT_MS, TRUE)) {
+#ifdef FF_WINXP_COMPAT
+                    GetOverlappedResult(hHidFile, &overlapped, &nBytes, TRUE)
+#else
+                    GetOverlappedResultEx(hHidFile, &overlapped, &nBytes, FF_IO_TERM_RESP_WAIT_MS, TRUE)
+#endif
+                    ) {
                     if (rdi.hid.dwVendorId == 0x054C) {
                         if (nBytes > 31) {
                             uint8_t batteryInfo = reportBuffer[caps.InputReportByteLength == 64 /*USB?*/ ? 30 : 32];
