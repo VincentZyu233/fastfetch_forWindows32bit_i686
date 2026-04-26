@@ -8,14 +8,17 @@
 #include "modules/separator/separator.h"
 
 #include <locale.h>
+#include <wchar.h>
 
-#if __SIZEOF_WCHAR_T__ == 4
 static inline size_t mbrtoc32(uint32_t* restrict pc32, const char* restrict s, size_t n, mbstate_t* restrict ps) {
-    return mbrtowc((wchar_t*) pc32, s, n, ps);
+    wchar_t wc;
+    size_t ret = mbrtowc(&wc, s, n, ps);
+    if ((size_t) ret >= (size_t) -3)
+        *pc32 = 0;
+    else
+        *pc32 = (uint32_t) wc;
+    return ret;
 }
-#else
-    #include <uchar.h>
-#endif
 
 static uint8_t getMbrWidth(const char* mbstr, uint32_t length, const char** next, mbstate_t* state) {
     if (__builtin_expect((uint8_t) *mbstr < 0x80, true)) // ASCII fast path
