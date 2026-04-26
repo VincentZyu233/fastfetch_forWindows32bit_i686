@@ -5,18 +5,37 @@
 #ifdef FF_HAVE_THREADS
     #if defined(_WIN32)
         #include <winternl.h>
-        #include <synchapi.h>
         #include <process.h>
         #include <processthreadsapi.h>
-        #define FF_THREAD_MUTEX_INITIALIZER SRWLOCK_INIT
+        #ifdef FF_WINXP_COMPAT
+            #include <windows.h>
+            #define FF_THREAD_MUTEX_INITIALIZER { 0 }
+typedef struct FFThreadMutex {
+    CRITICAL_SECTION cs;
+    LONG initialized;
+} FFThreadMutex;
+static inline void ffThreadMutexLock(FFThreadMutex* mutex) {
+    if (!mutex->initialized)
+    {
+        if (__sync_bool_compare_and_swap(&mutex->initialized, 0, 1))
+            InitializeCriticalSection(&mutex->cs);
+    }
+    EnterCriticalSection(&mutex->cs);
+}
+static inline void ffThreadMutexUnlock(FFThreadMutex* mutex) {
+    LeaveCriticalSection(&mutex->cs);
+}
+        #else
+            #include <synchapi.h>
+            #define FF_THREAD_MUTEX_INITIALIZER SRWLOCK_INIT
 typedef SRWLOCK FFThreadMutex;
-typedef HANDLE FFThreadType;
 static inline void ffThreadMutexLock(FFThreadMutex* mutex) {
     AcquireSRWLockExclusive(mutex);
 }
 static inline void ffThreadMutexUnlock(FFThreadMutex* mutex) {
     ReleaseSRWLockExclusive(mutex);
 }
+        #endif
 static inline FFThreadType ffThreadCreate(unsigned(__stdcall* func)(void*), void* data) {
     return (FFThreadType) _beginthreadex(NULL, 0, func, data, 0, NULL);
 }
