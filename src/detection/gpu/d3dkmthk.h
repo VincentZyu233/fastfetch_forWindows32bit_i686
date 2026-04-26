@@ -321,12 +321,39 @@ static_assert(sizeof(D3DKMT_NODEMETADATA) == 0x4E, "D3DKMT_NODEMETADATA structur
 
 #if _WIN32
 
+#ifndef FF_WINXP_COMPAT
+
 EXTERN_C _Check_return_ NTSTATUS APIENTRY D3DKMTOpenAdapterFromLuid(_Inout_ CONST D3DKMT_OPENADAPTERFROMLUID*);
 EXTERN_C _Check_return_ NTSTATUS APIENTRY D3DKMTQueryAdapterInfo(_Inout_ CONST D3DKMT_QUERYADAPTERINFO*);
 EXTERN_C _Check_return_ NTSTATUS APIENTRY D3DKMTCloseAdapter(_In_ CONST D3DKMT_CLOSEADAPTER*);
 EXTERN_C _Check_return_ NTSTATUS APIENTRY D3DKMTEnumAdapters(_Inout_ CONST D3DKMT_ENUMADAPTERS*);
 EXTERN_C _Check_return_ NTSTATUS APIENTRY D3DKMTEnumAdapters2(_Inout_ CONST D3DKMT_ENUMADAPTERS2*);
 EXTERN_C _Check_return_ NTSTATUS APIENTRY D3DKMTQueryStatistics(_In_ CONST D3DKMT_QUERYSTATISTICS*);
+
+#else // FF_WINXP_COMPAT
+
+typedef NTSTATUS (APIENTRY* ffD3DKMTOpenAdapterFromLuid_t)(const D3DKMT_OPENADAPTERFROMLUID*);
+typedef NTSTATUS (APIENTRY* ffD3DKMTQueryAdapterInfo_t)(const D3DKMT_QUERYADAPTERINFO*);
+typedef NTSTATUS (APIENTRY* ffD3DKMTCloseAdapter_t)(const D3DKMT_CLOSEADAPTER*);
+typedef NTSTATUS (APIENTRY* ffD3DKMTEnumAdapters_t)(D3DKMT_ENUMADAPTERS*);
+typedef NTSTATUS (APIENTRY* ffD3DKMTEnumAdapters2_t)(D3DKMT_ENUMADAPTERS2*);
+typedef NTSTATUS (APIENTRY* ffD3DKMTQueryStatistics_t)(const D3DKMT_QUERYSTATISTICS*);
+
+extern ffD3DKMTOpenAdapterFromLuid_t pD3DKMTOpenAdapterFromLuid;
+extern ffD3DKMTQueryAdapterInfo_t pD3DKMTQueryAdapterInfo;
+extern ffD3DKMTCloseAdapter_t pD3DKMTCloseAdapter;
+extern ffD3DKMTEnumAdapters_t pD3DKMTEnumAdapters;
+extern ffD3DKMTEnumAdapters2_t pD3DKMTEnumAdapters2;
+extern ffD3DKMTQueryStatistics_t pD3DKMTQueryStatistics;
+
+#define D3DKMTOpenAdapterFromLuid pD3DKMTOpenAdapterFromLuid
+#define D3DKMTQueryAdapterInfo pD3DKMTQueryAdapterInfo
+#define D3DKMTCloseAdapter pD3DKMTCloseAdapter
+#define D3DKMTEnumAdapters pD3DKMTEnumAdapters
+#define D3DKMTEnumAdapters2 pD3DKMTEnumAdapters2
+#define D3DKMTQueryStatistics pD3DKMTQueryStatistics
+
+#endif // FF_WINXP_COMPAT
 
 #else
 

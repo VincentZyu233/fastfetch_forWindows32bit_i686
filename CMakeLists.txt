@@ -108,6 +108,9 @@ option(ENABLE_LIBZFS "Enable libzfs" ON)
 if(WIN32 AND NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
     option(ENABLE_WIN81_COMPAT "Enable legacy Windows compatibility (Windows 8.1 and later; Windows 7 unsupported)" ON)
 endif()
+if(WIN32)
+    option(ENABLE_WINXP_COMPAT "Enable Windows XP compatibility (forces _WIN32_WINNT=0x0501)" OFF)
+endif()
 if(APPLE)
     option(ENABLE_APPLE_MEMSIZE_USABLE "Use usable memory size as total memory size in Memory module, to match other systems" OFF)
 endif()
@@ -167,7 +170,9 @@ endif()
 if(WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--tsaware -Wl,--build-id")
 
-    if(ENABLE_WIN81_COMPAT)
+    if(ENABLE_WINXP_COMPAT)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--subsystem,console,--major-os-version,5,--minor-os-version,1")
+    elseif(ENABLE_WIN81_COMPAT)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--subsystem,console,--major-os-version,6,--minor-os-version,3")
     else()
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--subsystem,console,--major-os-version,10,--minor-os-version,0")
@@ -1436,7 +1441,11 @@ if(LINUX)
 elseif(ANDROID)
     target_compile_definitions(libfastfetch PUBLIC _GNU_SOURCE _XOPEN_SOURCE _FILE_OFFSET_BITS=64 "$<$<CONFIG:DEBUG>:__BIONIC_FORTIFY>" "$<$<CONFIG:DEBUG>:__BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED>")
 elseif(WIN32)
-    target_compile_definitions(libfastfetch PUBLIC _GNU_SOURCE WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0A00 NOMINMAX UNICODE) # "$<$<CONFIG:Release>:_FORTIFY_SOURCE=3>"
+    if(ENABLE_WINXP_COMPAT)
+        target_compile_definitions(libfastfetch PUBLIC _GNU_SOURCE WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0501 NOMINMAX UNICODE)
+    else()
+        target_compile_definitions(libfastfetch PUBLIC _GNU_SOURCE WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0A00 NOMINMAX UNICODE) # "$<$<CONFIG:Release>:_FORTIFY_SOURCE=3>"
+    endif()
 elseif(APPLE)
     target_compile_definitions(libfastfetch PUBLIC _GNU_SOURCE _XOPEN_SOURCE __STDC_WANT_LIB_EXT1__ _FILE_OFFSET_BITS=64 _DARWIN_C_SOURCE)
 elseif(OpenBSD)
@@ -1475,6 +1484,9 @@ if(WIN32)
         target_compile_definitions(libfastfetch PUBLIC FF_WIN81_COMPAT=1)
     else()
         target_compile_definitions(libfastfetch PUBLIC FF_WIN81_COMPAT=0)
+    endif()
+    if(ENABLE_WINXP_COMPAT)
+        target_compile_definitions(libfastfetch PUBLIC FF_WINXP_COMPAT=1)
     endif()
 else()
     check_function_exists(malloc_usable_size HAVE_MALLOC_USABLE_SIZE)
@@ -1739,10 +1751,19 @@ elseif(WIN32)
         PRIVATE "hid"
         PRIVATE "wtsapi32"
         PRIVATE "cfgmgr32"
-        PRIVATE "winbrand"
         PRIVATE "secur32"
     )
-    if(NOT ENABLE_WIN81_COMPAT)
+    if(ENABLE_WINXP_COMPAT)
+        # winbrand.dll is not available on Windows XP; loaded dynamically
+        # mincore is not available on Windows XP
+    else()
+        target_link_libraries(libfastfetch
+            PRIVATE "winbrand"
+        )
+    endif()
+    if(ENABLE_WINXP_COMPAT)
+        # mincore is not available on Windows XP
+    elseif(NOT ENABLE_WIN81_COMPAT)
         target_link_libraries(libfastfetch
             PRIVATE "mincore"
         )

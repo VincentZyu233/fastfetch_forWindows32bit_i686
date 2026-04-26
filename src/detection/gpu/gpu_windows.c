@@ -9,6 +9,32 @@
 #include "d3dkmthk.h"
 
 #if _WIN32
+    #ifdef FF_WINXP_COMPAT
+        ffD3DKMTOpenAdapterFromLuid_t pD3DKMTOpenAdapterFromLuid = NULL;
+        ffD3DKMTQueryAdapterInfo_t pD3DKMTQueryAdapterInfo = NULL;
+        ffD3DKMTCloseAdapter_t pD3DKMTCloseAdapter = NULL;
+        ffD3DKMTEnumAdapters_t pD3DKMTEnumAdapters = NULL;
+        ffD3DKMTEnumAdapters2_t pD3DKMTEnumAdapters2 = NULL;
+        ffD3DKMTQueryStatistics_t pD3DKMTQueryStatistics = NULL;
+
+        static bool ffD3DKMTInit(void) {
+            static int initialized = 0;
+            if (!initialized) {
+                initialized = 1;
+                HMODULE hMod = LoadLibraryA("gdi32.dll");
+                if (hMod) {
+                    pD3DKMTOpenAdapterFromLuid = (ffD3DKMTOpenAdapterFromLuid_t)GetProcAddress(hMod, "D3DKMTOpenAdapterFromLuid");
+                    pD3DKMTQueryAdapterInfo = (ffD3DKMTQueryAdapterInfo_t)GetProcAddress(hMod, "D3DKMTQueryAdapterInfo");
+                    pD3DKMTCloseAdapter = (ffD3DKMTCloseAdapter_t)GetProcAddress(hMod, "D3DKMTCloseAdapter");
+                    pD3DKMTEnumAdapters = (ffD3DKMTEnumAdapters_t)GetProcAddress(hMod, "D3DKMTEnumAdapters");
+                    pD3DKMTEnumAdapters2 = (ffD3DKMTEnumAdapters2_t)GetProcAddress(hMod, "D3DKMTEnumAdapters2");
+                    pD3DKMTQueryStatistics = (ffD3DKMTQueryStatistics_t)GetProcAddress(hMod, "D3DKMTQueryStatistics");
+                }
+            }
+            return pD3DKMTOpenAdapterFromLuid != NULL;
+        }
+    #endif
+
     #include "common/windows/unicode.h"
     #include "common/windows/registry.h"
 
@@ -218,6 +244,13 @@ ffGPUDetectWsl2
     }
     if (dxgfd < 0) {
         return "Failed to open /dev/dxg";
+    }
+#endif
+
+#ifdef FF_WINXP_COMPAT
+    if (!ffD3DKMTInit()) {
+        FF_DEBUG("D3DKMT functions not available (gdi32.dll too old or Windows XP)");
+        return "D3DKMT not available on this system";
     }
 #endif
 

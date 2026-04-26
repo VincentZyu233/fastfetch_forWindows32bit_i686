@@ -6,7 +6,19 @@
 
 #include <windows.h>
 
-PWSTR WINAPI BrandingFormatString(PCWSTR format);
+typedef PWSTR (WINAPI* ffBrandingFormatString_t)(PCWSTR format);
+
+static PWSTR ffBrandingFormatString(PCWSTR format) {
+    static ffBrandingFormatString_t func = NULL;
+    static int resolved = 0;
+    if (!resolved) {
+        resolved = 1;
+        HMODULE mod = LoadLibraryW(L"winbrand.dll");
+        if (mod)
+            func = (ffBrandingFormatString_t)GetProcAddress(mod, "BrandingFormatString");
+    }
+    return func ? func(format) : NULL;
+}
 
 static bool getCodeName(FFOSResult* os) {
     FF_AUTO_CLOSE_FD HANDLE hKey = NULL;
@@ -27,9 +39,11 @@ static bool getCodeName(FFOSResult* os) {
 
 void ffDetectOSImpl(FFOSResult* os) {
     // https://dennisbabkin.com/blog/?t=how-to-tell-the-real-version-of-windows-your-app-is-running-on#ver_string
-    const wchar_t* rawName = BrandingFormatString(L"%WINDOWS_LONG%");
-    ffStrbufSetWS(&os->variant, rawName);
-    GlobalFree((HGLOBAL) rawName);
+    const wchar_t* rawName = ffBrandingFormatString(L"%WINDOWS_LONG%");
+    if (rawName) {
+        ffStrbufSetWS(&os->variant, rawName);
+        GlobalFree((HGLOBAL) rawName);
+    }
     ffStrbufSet(&os->prettyName, &os->variant);
     ffStrbufTrimRight(&os->variant, ' ');
 
