@@ -49,6 +49,24 @@ const char* ffNetIOGetIoCounters(FFlist* result, FFNetIOOptions* options) {
             continue;
         }
 
+#ifdef FF_WINXP_COMPAT
+        MIB_IFROW ifRow = { .dwIndex = adapter->IfIndex };
+        if (GetIfEntry(&ifRow) == NO_ERROR) {
+            FFNetIOResult* counters = FF_LIST_ADD(FFNetIOResult, *result);
+            *counters = (FFNetIOResult) {
+                .name = ffStrbufCreateMove(&name),
+                .txBytes = ifRow.dwOutOctets,
+                .rxBytes = ifRow.dwInOctets,
+                .txPackets = (ifRow.dwOutUcastPkts + ifRow.dwOutNUcastPkts),
+                .rxPackets = (ifRow.dwInUcastPkts + ifRow.dwInNUcastPkts),
+                .rxErrors = ifRow.dwInErrors,
+                .txErrors = ifRow.dwOutErrors,
+                .rxDrops = ifRow.dwInDiscards,
+                .txDrops = ifRow.dwOutDiscards,
+                .defaultRoute = isDefaultRoute,
+            };
+        }
+#else
         MIB_IF_ROW2 ifRow = { .InterfaceIndex = adapter->IfIndex };
         if (GetIfEntry2(&ifRow) == NO_ERROR) {
             FFNetIOResult* counters = FF_LIST_ADD(FFNetIOResult, *result);
@@ -65,6 +83,7 @@ const char* ffNetIOGetIoCounters(FFlist* result, FFNetIOOptions* options) {
                 .defaultRoute = isDefaultRoute,
             };
         }
+#endif
     }
 
     return NULL;

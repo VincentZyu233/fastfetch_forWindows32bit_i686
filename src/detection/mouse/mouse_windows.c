@@ -59,6 +59,7 @@ const char* ffDetectMouse(FFlist* devices /* List of FFMouseDevice */) {
             }
         }
 
+#ifndef FF_WINXP_COMPAT
         if (!device->name.length) {
             // https://stackoverflow.com/a/64321096/9976392
             DEVPROPTYPE propertyType;
@@ -74,6 +75,7 @@ const char* ffDetectMouse(FFlist* devices /* List of FFMouseDevice */) {
                 }
             }
         }
+#endif
 
         if (!device->name.length) {
             ffStrbufSetF(&device->name, "Unknown device %04X-%04X", (unsigned) rdi.hid.dwVendorId, (unsigned) rdi.hid.dwProductId);
