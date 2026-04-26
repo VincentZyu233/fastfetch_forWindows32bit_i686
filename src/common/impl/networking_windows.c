@@ -81,7 +81,9 @@ const char* ffNetworkingSendHttpRequest(FFNetworkingState* state, const char* ho
 
     ADDRINFOW* addr;
     ADDRINFOW hints = {
+#ifndef FF_WINXP_COMPAT
         .ai_flags = AI_NUMERICSERV,
+#endif
         .ai_family = state->ipv6 ? AF_INET6 : AF_INET,
         .ai_socktype = SOCK_STREAM,
     };
@@ -229,7 +231,13 @@ const char* ffNetworkingRecvHttpResponse(FFNetworkingState* state, FFstrbuf* buf
             } else {
                 FF_DEBUG("WSAWaitForMultipleEvents failed: %s", ffDebugWin32Error((DWORD) WSAGetLastError()));
             }
-            if (CancelIoEx((HANDLE) state->sockfd, &state->overlapped)) {
+            if (
+#ifndef FF_WINXP_COMPAT
+                CancelIoEx((HANDLE) state->sockfd, &state->overlapped)
+#else
+                CancelIo((HANDLE) state->sockfd)
+#endif
+            ) {
                 WSAWaitForMultipleEvents(1, &state->overlapped.hEvent, TRUE, 10, TRUE);
             }
             WSACloseEvent(state->overlapped.hEvent);

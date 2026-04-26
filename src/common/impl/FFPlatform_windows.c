@@ -15,6 +15,7 @@
 #include <secext.h>
 
 static void getExePath(FFPlatform* platform) {
+#ifndef FF_WINXP_COMPAT
     wchar_t exePathW[MAX_PATH];
 
     FF_AUTO_CLOSE_FD HANDLE hPath = CreateFileW(
@@ -32,44 +33,73 @@ static void getExePath(FFPlatform* platform) {
             if (ffStrbufStartsWithS(&platform->exePath, "\\\\?\\")) {
                 ffStrbufSubstrAfter(&platform->exePath, 3);
             }
+            ffStrbufReplaceAllC(&platform->exePath, '\\', '/');
+            return;
         }
     }
-
-    if (platform->exePath.length == 0) {
-        PCUNICODE_STRING imagePathName = &ffGetPeb()->ProcessParameters->ImagePathName;
-        ffStrbufSetNWS(&platform->exePath, imagePathName->Length / sizeof(wchar_t), imagePathName->Buffer);
-    }
-
+#endif
+    PCUNICODE_STRING imagePathName = &ffGetPeb()->ProcessParameters->ImagePathName;
+    ffStrbufSetNWS(&platform->exePath, imagePathName->Length / sizeof(wchar_t), imagePathName->Buffer);
     ffStrbufReplaceAllC(&platform->exePath, '\\', '/');
 }
 
 static void getHomeDir(FFPlatform* platform) {
+#ifdef FF_WINXP_COMPAT
+    wchar_t pathW[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, SHGFP_TYPE_CURRENT, pathW))) {
+        ffStrbufSetWS(&platform->homeDir, pathW);
+    } else
+#else
     PWSTR pPath = NULL;
     if (SUCCEEDED(SHGetKnownFolderPath(&FOLDERID_Profile, KF_FLAG_DEFAULT, NULL, &pPath))) {
         ffStrbufSetWS(&platform->homeDir, pPath);
-        ffStrbufReplaceAllC(&platform->homeDir, '\\', '/');
-        ffStrbufEnsureEndsWithC(&platform->homeDir, '/');
-    } else {
+        CoTaskMemFree(pPath);
+    } else
+#endif
+    {
         ffStrbufSetS(&platform->homeDir, getenv("USERPROFILE"));
-        ffStrbufReplaceAllC(&platform->homeDir, '\\', '/');
-        ffStrbufEnsureEndsWithC(&platform->homeDir, '/');
     }
-    CoTaskMemFree(pPath);
+    ffStrbufReplaceAllC(&platform->homeDir, '\\', '/');
+    ffStrbufEnsureEndsWithC(&platform->homeDir, '/');
 }
 
 static void getCacheDir(FFPlatform* platform) {
+#ifdef FF_WINXP_COMPAT
+    wchar_t pathW[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, pathW))) {
+        ffStrbufSetWS(&platform->cacheDir, pathW);
+        ffStrbufReplaceAllC(&platform->cacheDir, '\\', '/');
+        ffStrbufEnsureEndsWithC(&platform->cacheDir, '/');
+        return;
+    }
+#else
     PWSTR pPath = NULL;
     if (SUCCEEDED(SHGetKnownFolderPath(&FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &pPath))) {
         ffStrbufSetWS(&platform->cacheDir, pPath);
         ffStrbufReplaceAllC(&platform->cacheDir, '\\', '/');
         ffStrbufEnsureEndsWithC(&platform->cacheDir, '/');
-    } else {
-        ffStrbufAppend(&platform->cacheDir, &platform->homeDir);
-        ffStrbufAppendS(&platform->cacheDir, "AppData/Local/");
+        CoTaskMemFree(pPath);
+        return;
     }
     CoTaskMemFree(pPath);
+#endif
+    ffStrbufAppend(&platform->cacheDir, &platform->homeDir);
+    ffStrbufAppendS(&platform->cacheDir, "AppData/Local/");
 }
 
+#ifdef FF_WINXP_COMPAT
+static void platformPathAddFolderByCsidl(FFlist* dirs, int csidl) {
+    wchar_t pathW[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathW(NULL, csidl, NULL, SHGFP_TYPE_CURRENT, pathW))) {
+        FF_STRBUF_AUTO_DESTROY buffer = ffStrbufCreateWS(pathW);
+        ffStrbufReplaceAllC(&buffer, '\\', '/');
+        ffStrbufEnsureEndsWithC(&buffer, '/');
+        if (!FF_LIST_CONTAINS(*dirs, &buffer, ffStrbufEqual)) {
+            ffStrbufInitMove(FF_LIST_ADD(FFstrbuf, *dirs), &buffer);
+        }
+    }
+}
+#else
 static void platformPathAddKnownFolder(FFlist* dirs, REFKNOWNFOLDERID folderId) {
     PWSTR pPath = NULL;
     if (SUCCEEDED(SHGetKnownFolderPath(folderId, KF_FLAG_DEFAULT, NULL, &pPath))) {
@@ -82,6 +112,7 @@ static void platformPathAddKnownFolder(FFlist* dirs, REFKNOWNFOLDERID folderId) 
         }
     }
 }
+#endif
 
 static void platformPathAddEnvSuffix(FFlist* dirs, const char* env, const char* suffix) {
     const char* value = getenv(env);
@@ -112,9 +143,15 @@ static void getConfigDirs(FFPlatform* platform) {
     }
 
     ffPlatformPathAddHome(&platform->configDirs, platform, ".config/");
+#ifdef FF_WINXP_COMPAT
+    platformPathAddFolderByCsidl(&platform->configDirs, CSIDL_COMMON_APPDATA);
+    platformPathAddFolderByCsidl(&platform->configDirs, CSIDL_APPDATA);
+    platformPathAddFolderByCsidl(&platform->configDirs, CSIDL_LOCAL_APPDATA);
+#else
     platformPathAddKnownFolder(&platform->configDirs, &FOLDERID_ProgramData);
     platformPathAddKnownFolder(&platform->configDirs, &FOLDERID_RoamingAppData);
     platformPathAddKnownFolder(&platform->configDirs, &FOLDERID_LocalAppData);
+#endif
     ffPlatformPathAddHome(&platform->configDirs, platform, "");
 }
 
@@ -126,9 +163,15 @@ static void getDataDirs(FFPlatform* platform) {
         platformPathAddEnvSuffix(&platform->dataDirs, "MINGW_PREFIX", "share");
     }
     ffPlatformPathAddHome(&platform->dataDirs, platform, ".local/share/");
+#ifdef FF_WINXP_COMPAT
+    platformPathAddFolderByCsidl(&platform->dataDirs, CSIDL_COMMON_APPDATA);
+    platformPathAddFolderByCsidl(&platform->dataDirs, CSIDL_APPDATA);
+    platformPathAddFolderByCsidl(&platform->dataDirs, CSIDL_LOCAL_APPDATA);
+#else
     platformPathAddKnownFolder(&platform->dataDirs, &FOLDERID_ProgramData);
     platformPathAddKnownFolder(&platform->dataDirs, &FOLDERID_RoamingAppData);
     platformPathAddKnownFolder(&platform->dataDirs, &FOLDERID_LocalAppData);
+#endif
     ffPlatformPathAddHome(&platform->dataDirs, platform, "");
 }
 

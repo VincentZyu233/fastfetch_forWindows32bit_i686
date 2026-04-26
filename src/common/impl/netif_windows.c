@@ -3,6 +3,54 @@
 #include <ws2tcpip.h> // AF_INET6, IN6_IS_ADDR_UNSPECIFIED
 #include <iphlpapi.h>
 
+#ifdef FF_WINXP_COMPAT
+
+bool ffNetifGetDefaultRouteImplV4(FFNetifDefaultRouteResult* result) {
+    ULONG bufSize = 0;
+    if (GetIpForwardTable(NULL, &bufSize, FALSE) != ERROR_INSUFFICIENT_BUFFER)
+        return false;
+
+    PMIB_IPFORWARDTABLE pIpForwardTable = (PMIB_IPFORWARDTABLE) malloc(bufSize);
+    if (!pIpForwardTable)
+        return false;
+
+    if (GetIpForwardTable(pIpForwardTable, &bufSize, FALSE) != NO_ERROR) {
+        free(pIpForwardTable);
+        return false;
+    }
+
+    bool foundDefault = false;
+    uint32_t smallestMetric = UINT32_MAX;
+
+    for (ULONG i = 0; i < pIpForwardTable->dwNumEntries; ++i) {
+        MIB_IPFORWARDROW* row = &pIpForwardTable->table[i];
+
+        if (row->dwForwardDest == 0 && row->dwForwardMask == 0) {
+            MIB_IFROW ifRow = { .dwIndex = row->dwForwardIfIndex };
+            if (GetIfEntry(&ifRow) == NO_ERROR &&
+                ifRow.dwOperStatus == MIB_IF_OPER_STATUS_OPERATIONAL)
+            {
+                uint32_t realMetric = row->dwForwardMetric1;
+                if (realMetric < smallestMetric) {
+                    smallestMetric = realMetric;
+                    result->ifIndex = row->dwForwardIfIndex;
+                    foundDefault = true;
+                }
+            }
+        }
+    }
+
+    free(pIpForwardTable);
+    return foundDefault;
+}
+
+bool ffNetifGetDefaultRouteImplV6(FFNetifDefaultRouteResult* result) {
+    (void) result;
+    return false;
+}
+
+#else
+
 bool ffNetifGetDefaultRouteImplV4(FFNetifDefaultRouteResult* result) {
     PMIB_IPFORWARD_TABLE2 pIpForwardTable = NULL;
 
@@ -90,3 +138,5 @@ bool ffNetifGetDefaultRouteImplV6(FFNetifDefaultRouteResult* result) {
 
     return foundDefault;
 }
+
+#endif
