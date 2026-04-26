@@ -97,7 +97,19 @@ char* frealpath(HANDLE hFile, char* resolved_name) {
     }
 
     wchar_t resolvedNameW[MAX_PATH + 4]; /* +4 for "\\\\?\\" prefix */
-    DWORD lenW = GetFinalPathNameByHandleW(hFile, resolvedNameW, (DWORD) ARRAY_SIZE(resolvedNameW), FILE_NAME_NORMALIZED);
+
+    HMODULE hKernel32 = GetModuleHandleW(L"kernel32.dll");
+    typedef DWORD (WINAPI *GetFinalPathNameByHandleW_t)(HANDLE, LPWSTR, DWORD, DWORD);
+    GetFinalPathNameByHandleW_t pGetFinalPathNameByHandleW =
+        hKernel32 ? (GetFinalPathNameByHandleW_t) GetProcAddress(hKernel32, "GetFinalPathNameByHandleW") : NULL;
+
+    DWORD lenW;
+    if (pGetFinalPathNameByHandleW)
+        lenW = pGetFinalPathNameByHandleW(hFile, resolvedNameW, (DWORD) ARRAY_SIZE(resolvedNameW), FILE_NAME_NORMALIZED);
+    else {
+        errno = ENOSYS;
+        return NULL;
+    }
 
     if (lenW == 0) {
         errno = winerr2Errno(GetLastError());
@@ -186,7 +198,46 @@ char* realpath(const char* __restrict file_name, char* __restrict resolved_name)
         return NULL;
     }
 
-    return frealpath(hFile, resolved_name);
+    char* result = frealpath(hFile, resolved_name);
+    if (result || errno != ENOSYS)
+        return result;
+
+    // Fallback for XP: GetFinalPathNameByHandleW not available
+    wchar_t resolvedW[MAX_PATH + 1];
+    DWORD len = GetFullPathNameW(fileNameW, (DWORD) ARRAY_SIZE(resolvedW), resolvedW, NULL);
+    if (len == 0 || len >= ARRAY_SIZE(resolvedW)) {
+        errno = winerr2Errno(GetLastError());
+        return NULL;
+    }
+
+    if (resolved_name)
+    {
+        ULONG outBytes = 0;
+        if (!NT_SUCCESS(RtlUnicodeToUTF8N(resolved_name, MAX_PATH, &outBytes, resolvedW, (ULONG) (wcslen(resolvedW) * sizeof(wchar_t)))))
+        {
+            errno = E2BIG;
+            return NULL;
+        }
+        return resolved_name;
+    }
+    else
+    {
+        char tmp[MAX_PATH * 4];
+        ULONG outBytes = 0;
+        if (!NT_SUCCESS(RtlUnicodeToUTF8N(tmp, (ULONG) sizeof(tmp), &outBytes, resolvedW, (ULONG) (wcslen(resolvedW) * sizeof(wchar_t)))))
+        {
+            errno = E2BIG;
+            return NULL;
+        }
+        resolved_name = (char*) malloc(outBytes);
+        if (!resolved_name)
+        {
+            errno = ENOMEM;
+            return NULL;
+        }
+        memcpy(resolved_name, tmp, outBytes);
+        return resolved_name;
+    }
 }
 
 ssize_t freadlink(HANDLE hFile, char* buf, size_t bufsiz) {
