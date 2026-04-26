@@ -41,7 +41,7 @@ jobs:
         run: |
           MSG="$COMMIT_MSG"
           MANUAL="$MANUAL_STAGE"
-          echo "commit_message=$MSG" >> "$GITHUB_OUTPUT"
+          echo "commit_message=$(echo "$MSG" | head -1)" >> "$GITHUB_OUTPUT"
 
           VERSION="v$(grep '^    VERSION' CMakeLists.txt | head -1 | sed 's/.*VERSION \([0-9.]*\).*/\1/')"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
