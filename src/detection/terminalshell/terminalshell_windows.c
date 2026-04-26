@@ -180,6 +180,27 @@ static bool detectDefaultTerminal(FFTerminalResult* result) {
                     ffStrbufSetS(&result->processName, "WindowsTerminal.exe");
                     ffStrbufSetS(&result->prettyName, "WindowsTerminal");
 
+#ifdef FF_WINXP_COMPAT
+                    {
+                        wchar_t programFiles[MAX_PATH];
+                        if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PROGRAM_FILES, NULL, SHGFP_TYPE_CURRENT, programFiles))) {
+                            ffStrbufSetWS(&result->exe, programFiles);
+
+                            ffStrbufAppendS(&result->exe, "\\WindowsApps\\");
+                            ffStrbufAppend(&result->exe, &path);
+                            ffStrbufAppendS(&result->exe, "\\WindowsTerminal.exe");
+
+                            if (ffPathExists(result->exe.chars, FF_PATHTYPE_FILE)) {
+                                result->exeName = result->exe.chars + ffStrbufLastIndexC(&result->exe, '\\') + 1;
+                                ffStrbufSet(&result->exePath, &result->exe);
+                            } else {
+                                ffStrbufDestroy(&result->exe);
+                                ffStrbufInitMove(&result->exe, &path);
+                                result->exeName = "";
+                            }
+                        }
+                    }
+#else
                     PWSTR programFiles = NULL;
                     if (SUCCEEDED(SHGetKnownFolderPath(&FOLDERID_ProgramFiles, KF_FLAG_DEFAULT, NULL, &programFiles))) {
                         ffStrbufSetWS(&result->exe, programFiles);
@@ -199,6 +220,7 @@ static bool detectDefaultTerminal(FFTerminalResult* result) {
                             result->exeName = "";
                         }
                     }
+#endif
                     return true;
                 }
             }

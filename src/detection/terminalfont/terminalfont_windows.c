@@ -106,6 +106,13 @@ static void detectFromWindowsTerminal(const FFstrbuf* terminalExe, FFTerminalFon
                 error = "Error reading Windows Terminal portable settings JSON file";
             }
         } else {
+#ifdef FF_WINXP_COMPAT
+            {
+                wchar_t localAppDataW[MAX_PATH];
+                if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, localAppDataW)))
+                    ffStrbufSetWS(&jsonPath, localAppDataW);
+            }
+#else
             PWSTR localAppDataW = NULL;
             if (SUCCEEDED(SHGetKnownFolderPath(&FOLDERID_LocalAppData, KF_FLAG_DEFAULT, NULL, &localAppDataW))) {
                 ffStrbufSetWS(&jsonPath, localAppDataW);
@@ -130,9 +137,10 @@ static void detectFromWindowsTerminal(const FFstrbuf* terminalExe, FFTerminalFon
                     ffStrbufAppendS(&jsonPath, "\\Microsoft\\Windows Terminal\\settings.json");
                     if (!ffAppendFileBuffer(jsonPath.chars, &json)) {
                         error = "Error reading Windows Terminal settings JSON file";
-                    }
                 }
             }
+#endif
+        }
         }
     }
 

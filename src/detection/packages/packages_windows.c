@@ -119,11 +119,17 @@ static void detectScoop(FFPackagesResult* result) {
             ffStrbufSetJsonVal(&scoopPath, yyjson_obj_get(root, "global_path"));
         }
         if (scoopPath.length == 0) {
+#ifdef FF_WINXP_COMPAT
+            wchar_t pPath[MAX_PATH];
+            if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, pPath)))
+                ffStrbufSetWS(&scoopPath, pPath);
+#else
             PWSTR pPath = NULL;
             if (SUCCEEDED(SHGetKnownFolderPath(&FOLDERID_ProgramData, KF_FLAG_DEFAULT, NULL, &pPath))) {
                 ffStrbufSetWS(&scoopPath, pPath);
                 CoTaskMemFree(pPath);
             }
+#endif
             ffStrbufAppendS(&scoopPath, "/scoop");
         }
         ffStrbufAppendS(&scoopPath, "/apps/");
