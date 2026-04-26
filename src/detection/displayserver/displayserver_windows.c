@@ -258,12 +258,19 @@ static inline void freeArgBuffer(FFArgBuffer* buffer) {
 
 // http://undoc.airesoft.co.uk/user32.dll/IsThreadDesktopComposited.php
 BOOL WINAPI IsThreadDesktopComposited();
-BOOL WINAPI GetDpiForMonitorInternal(HMONITOR hmonitor, MONITOR_DPI_TYPE dpiType, UINT* dpiX, UINT* dpiY);
+typedef BOOL (WINAPI* GetDpiForMonitorInternal_t)(HMONITOR, MONITOR_DPI_TYPE, UINT*, UINT*);
+static GetDpiForMonitorInternal_t pGetDpiForMonitorInternal = NULL;
 
 static void detectDisplays(FFDisplayServerResult* ds) {
     ffLoadDisplayConfig();
     if (!ffQueryDisplayConfig || !ffDisplayConfigGetDeviceInfo)
         return;
+
+    if (!pGetDpiForMonitorInternal) {
+        HMODULE hUser32 = GetModuleHandleA("user32.dll");
+        if (hUser32)
+            pGetDpiForMonitorInternal = (GetDpiForMonitorInternal_t) GetProcAddress(hUser32, "GetDpiForMonitorInternal");
+    }
 
     DISPLAYCONFIG_PATH_INFO paths[128];
     uint32_t pathCount = ARRAY_SIZE(paths);
@@ -363,7 +370,8 @@ static void detectDisplays(FFDisplayServerResult* ds) {
             HMONITOR hMonitor = MonitorFromPoint(*(POINT*) &sourceMode->position, MONITOR_DEFAULTTONULL);
             if (hMonitor) {
                 UINT ignored;
-                GetDpiForMonitorInternal(hMonitor, MDT_EFFECTIVE_DPI, &systemDpi, &ignored);
+                if (pGetDpiForMonitorInternal)
+                    pGetDpiForMonitorInternal(hMonitor, MDT_EFFECTIVE_DPI, &systemDpi, &ignored);
             }
 
             if (systemDpi == 0) {
