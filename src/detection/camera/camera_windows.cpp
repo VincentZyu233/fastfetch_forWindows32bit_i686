@@ -11,6 +11,9 @@ extern "C" {
 #include <mfidl.h>
 
 extern "C" const char* ffDetectCamera(FF_A_UNUSED FFlist* result) {
+#ifdef FF_WINXP_COMPAT
+    return "Camera detection is not supported on Windows XP";
+#else
     FF_LIBRARY_LOAD_MESSAGE(mfplat, "mfplat" FF_LIBRARY_EXTENSION, 1)
     FF_LIBRARY_LOAD_SYMBOL_MESSAGE(mfplat, MFCreateAttributes)
     FF_LIBRARY_LOAD_MESSAGE(mf, "mf" FF_LIBRARY_EXTENSION, 1)
@@ -148,4 +151,5 @@ extern "C" const char* ffDetectCamera(FF_A_UNUSED FFlist* result) {
     }
 
     return nullptr;
+#endif
 }
