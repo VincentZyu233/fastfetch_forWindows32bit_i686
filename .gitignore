@@ -10,3 +10,8 @@ fastfetch.kdev4
 *.user
 *.user.*
 *.swp
+
+tmp/
+**/tmp/
+temp/
+**/temp/

@@ -1,3 +1,22 @@
+## Windows XP / Vista / 7 (i686) Legacy Build
+
+> **[📖 English](README.md)** · **[📖 简体中文](README-cn.md)**
+
+> This is a forked legacy build of **fastfetch** for **32-bit Windows XP SP3 / Vista / 7**.
+> The original project supports Windows 8.1+; this fork backports it to older systems.
+
+<img src="doc/preview-win7-xp-legacy.png" width="60%" align="center" />
+
+### Quick Links
+
+- 📖 **[Build Guide (English)](.github/workflows/build-windows-i686-legacy.md)**
+- 📖 **[构建指南 (简体中文)](.github/workflows/build-windows-i686-legacy.zh-cn.md)**
+- 📦 **[GitHub Repository (fork)](https://github.com/VincentZyu233/fastfetch_forWindows32bit_i686)**
+
+---
+
+> **Below is the original project's README:**
+
 # Fastfetch
 
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/fastfetch-cli/fastfetch/ci.yml)](https://github.com/fastfetch-cli/fastfetch/actions)
@@ -11,9 +30,8 @@
 [![latest packaged version(s)](https://repology.org/badge/latest-versions/fastfetch.svg)](https://repology.org/project/fastfetch/versions)
 [![Packaging status](https://repology.org/badge/tiny-repos/fastfetch.svg)](https://repology.org/project/fastfetch/versions)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fastfetch-cli/fastfetch)
-[![中文README](https://img.shields.io/badge/%E4%B8%AD%E6%96%87-README-red)](README-cn.md)
 
-Fastfetch is a [neofetch](https://github.com/dylanaraps/neofetch)-like tool for fetching system information and displaying it in a visually appealing way. It is written mainly in C, with a focus on performance and customizability. Currently, it supports Linux, macOS, Windows 8.1+, Android, FreeBSD, OpenBSD, NetBSD, DragonFly, Haiku and SunOS (illumos, Solaris).
+Fastfetch is a [neofetch](https://github.com/dylanaraps/neofetch)-like tool for fetching system information and displaying it in a visually appealing way. It is written mainly in C, with a focus on performance and customizability. Currently, it supports Linux, macOS, Windows 7+, Android, FreeBSD, OpenBSD, NetBSD, DragonFly, Haiku and SunOS (illumos, Solaris).
 
 > Note: Fastfetch is only actively tested on x86-64 and aarch64 platforms. It may work on other platforms but is not guaranteed to do so.
 
