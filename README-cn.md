@@ -7,8 +7,8 @@
 
 ### 快速链接
 
-> **[📖 English](build-windows-i686-legacy.md)** · **[📖 简体中文](build-windows-i686-legacy.zh-cn.md)**  
-> **[📖 Main README (English)](../../README.md)** · **[📖 主 README (简体中文)](../../README-cn.md)**
+> **[📖 English](.github/workflows/build-windows-i686-legacy.md)** · **[📖 简体中文](.github/workflows/build-windows-i686-legacy.zh-cn.md)**  
+> **[📖 Main README (English)](README.md)** · **[📖 主 README (简体中文)](README-cn.md)**
 
 ---
 
