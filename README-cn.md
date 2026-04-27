@@ -1,7 +1,5 @@
 ## Windows XP / Vista / 7（i686）旧版系统构建
 
-> **[📖 English](README.md)** · **[📖 简体中文](README-cn.md)**
-
 > 这是 **fastfetch** 针对 **32 位 Windows XP SP3 / Vista / 7** 的分支兼容构建。
 > 原版项目支持 Windows 7+；此分支将其回溯至更早的系统。
 
@@ -9,8 +7,8 @@
 
 ### 快速链接
 
-- 📖 **[构建指南 (简体中文)](.github/workflows/build-windows-i686-legacy.zh-cn.md)**
-- 📖 **[Build Guide (English)](.github/workflows/build-windows-i686-legacy.md)**
+> **[📖 English](build-windows-i686-legacy.md)** · **[📖 简体中文](build-windows-i686-legacy.zh-cn.md)**  
+> **[📖 Main README (English)](../../README.md)** · **[📖 主 README (简体中文)](../../README-cn.md)**
 
 ---
 

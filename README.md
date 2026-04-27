@@ -1,7 +1,5 @@
 ## Windows XP / Vista / 7 (i686) Legacy Build
 
-> **[📖 English](README.md)** · **[📖 简体中文](README-cn.md)**
-
 > This is a forked legacy build of **fastfetch** for **32-bit Windows XP SP3 / Vista / 7**.
 > The original project supports Windows 8.1+; this fork backports it to older systems.
 
@@ -9,9 +7,8 @@
 
 ### Quick Links
 
-- 📖 **[Build Guide (English)](.github/workflows/build-windows-i686-legacy.md)**
-- 📖 **[构建指南 (简体中文)](.github/workflows/build-windows-i686-legacy.zh-cn.md)**
-- 📦 **[GitHub Repository (fork)](https://github.com/VincentZyu233/fastfetch_forWindows32bit_i686)**
+> **[📖 English](build-windows-i686-legacy.md)** · **[📖 简体中文](build-windows-i686-legacy.zh-cn.md)**  
+> **[📖 Main README (English)](../../README.md)** · **[📖 主 README (简体中文)](../../README-cn.md)**
 
 ---
 
